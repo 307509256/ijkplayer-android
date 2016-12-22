@@ -67,6 +67,19 @@ public class SampleMediaListFragment extends Fragment {
             }
         });
 
+        mAdapter.addItem("rtsp://218.204.223.237:554/live/1/67A7572844E51A64/f68g2mj7wjua3la7.sdp", "rtsp port");
+        mAdapter.addItem("rtsp://119.164.59.39:1554/iptv/Tvod/iptv/001/001/ch15050914035980594154.rsc/27191_Uni.sdp", "rtsp IPTV-CCTV");
+        mAdapter.addItem("rtsp://admin:qx12345678@221.182.63.227:23554/Streaming/Channels/101?transportmode=unicast", "rtsp-1080p collage");
+        mAdapter.addItem("rtsp://117.139.57.40:556/HongTranSvr?DevId=4085e760-cf31-489a-b883-b8c330ebc30c&Session=4085e760-cf31-489a-b883-b8c330ebc30c&Url=\"rtsp://admin:a12345678@10.2.0.52:554/cam/realmonitor?channel=1&subtype=1\"", "rtsp-1080p   bridge");
+        mAdapter.addItem("rtsp://admin:abc12345@192.168.5.12:554/cam/realmonitor?channel=1&subtype=1", "rtsp-1080p other");
+        mAdapter.addItem("rtsp://60.255.231.113:556/HongTranSvr?DevId=376105ab-73a9-4441-b931-138a2ce330c0&Session=376105ab-73a9-4441-b931-138a2ce330c0", "rtsp-1080p test 1216");
+
+        mAdapter.addItem("rtmp://rtmpplay3.idol001.com/live/korea_sbs", "korea_sbs");
+
+        mAdapter.addItem("http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/gear5/prog_index.m3u8", "1080P");
+        mAdapter.addItem("http://live.hkstv.hk.lxdns.com/live/hks/playlist.m3u8", "720P");
+        mAdapter.addItem("https://image.qiluyidian.mobi/58502406867019855214.mp4", "https-test");
+        mAdapter.addItem("https://vod2.fangyan.tv/c07a0ccbd55e47dc.mp4", "https-test-fangyan");
         mAdapter.addItem("http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/bipbop_4x3_variant.m3u8", "bipbop basic master playlist");
         mAdapter.addItem("http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear1/prog_index.m3u8", "bipbop basic 400x300 @ 232 kbps");
         mAdapter.addItem("http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_4x3/gear2/prog_index.m3u8", "bipbop basic 640x480 @ 650 kbps");

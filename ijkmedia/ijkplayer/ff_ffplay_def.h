@@ -386,6 +386,7 @@ typedef struct VideoState {
 
     volatile int latest_seek_load_serial;
     volatile int64_t latest_seek_load_start_at;
+    int max_cached_duration;
 } VideoState;
 
 /* options specified by the user */
