@@ -101,9 +101,9 @@
 
 static AVPacket flush_pkt;
 
-//add by gongjia
+
 #define   MAX_CACHED_DURATION
-static 	  int check_idr = 0;
+
 
 #if CONFIG_AVFILTER
 // FFP_MERGE: opt_add_vfilter
@@ -647,6 +647,20 @@ static void video_image_display2(FFPlayer *ffp)
         if (!ffp->first_video_frame_rendered) {
             ffp->first_video_frame_rendered = 1;
             ffp_notify_msg1(ffp, FFP_MSG_VIDEO_RENDERING_START);
+			if(ffp->blive == -1){
+				int duration_l = ffp_get_duration_l(ffp);
+				if(duration_l == 0) {
+					ffp->blive = 1;
+					av_log(NULL, AV_LOG_INFO, "[gdebug %s: %d] blive = %d, %s\n", __FUNCTION__, __LINE__, ffp->blive, ffp->blive?"live":"vod");
+				}else if(duration_l > 0) {
+					ffp->blive = 0;
+					av_log(NULL, AV_LOG_INFO, "[gdebug %s: %d] blive = %d, %s\n", __FUNCTION__, __LINE__, ffp->blive, ffp->blive?"live":"vod");
+				}else{
+					ffp->blive = -1;
+					av_log(NULL, AV_LOG_ERROR, "[gdebug %s: %d]\n", __FUNCTION__, __LINE__);
+				}
+				
+			}
         }
     }
 }
@@ -2505,9 +2519,8 @@ static int read_thread(void *arg)
     int64_t prev_io_tick_counter = 0;
     int64_t io_tick_counter = 0;
 
-	//gongjia add.
-	check_idr = 0;
-
+	int find_idr = 0;
+	int first_pframe_cnt = 0;
 	
     if (!wait_mutex) {
         av_log(NULL, AV_LOG_FATAL, "SDL_CreateMutex(): %s\n", SDL_GetError());
@@ -2584,11 +2597,25 @@ static int read_thread(void *arg)
     AVDictionary *swr_preset_opts;
 	*/
 
-	
+
+	AVDictionaryEntry *is_live = av_dict_get(ffp->player_opts, "islive", NULL, 0);
+    if (is_live) {
+		int islive = atoi(is_live->value);
+		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. get from java, islive = %d\n",__FUNCTION__, __LINE__, islive);
+        
+        if (islive < 0) {
+            ffp->blive = -1;
+        } else {
+            ffp->blive = islive;
+        }
+    } else {
+        ffp->blive = -1;
+    }
+
 	AVDictionaryEntry *dic_pro = av_dict_get(ffp->player_opts, "probesize", NULL, AV_DICT_IGNORE_SUFFIX);
     if (dic_pro) {
 		int probesize = atoi(dic_pro->value);
-		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. get probe_size(%d) from java\n",__FUNCTION__, __LINE__, probesize);
+		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. get from java, probe_size = %d\n",__FUNCTION__, __LINE__, probesize);
         
         if (probesize <= 0) {
             ic->probesize = 0;
@@ -2599,7 +2626,7 @@ static int read_thread(void *arg)
         ic->probesize = 256*1024;
     }
 
-	av_log(NULL, AV_LOG_INFO, "[gdebug %s: %d] rtsp ic->probesize = %lld, packet_buffering=%d\n", __FUNCTION__, __LINE__, ic->probesize, ffp->packet_buffering);
+	//av_log(NULL, AV_LOG_INFO, "[gdebug %s: %d] ic->probesize = %lld, packet_buffering=%d\n", __FUNCTION__, __LINE__, ic->probesize, ffp->packet_buffering);
 	
     err = avformat_find_stream_info(ic, opts);
 
@@ -2648,15 +2675,16 @@ static int read_thread(void *arg)
 
 	AVDictionaryEntry *e = av_dict_get(ffp->player_opts, "max_cached_duration", NULL, 0);
     if (e) {
-		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. max_cached_duration\n",__FUNCTION__, __LINE__);
-        int max_cached_duration = atoi(e->value);
+		int max_cached_duration = atoi(e->value);
+		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. get from java, max_cached_duration = %d\n",__FUNCTION__, __LINE__, max_cached_duration);
+        
         if (max_cached_duration <= 0) {
             is->max_cached_duration = 0;
         } else {
             is->max_cached_duration = max_cached_duration;
         }
     } else {
-        is->max_cached_duration = 3000;  //max cache
+        is->max_cached_duration = 0;  //max cache
     }
 
 #endif
@@ -2807,7 +2835,7 @@ static int read_thread(void *arg)
                  (ic->pb && !strncmp(ffp->input_filename, "mmsh:", 5)))) {
             /* wait 10 ms to avoid trying to get another packet */
             /* XXX: horrible */
-			//gongjia mask
+
             //SDL_Delay(10);
             //continue;
         }
@@ -3036,30 +3064,27 @@ static int read_thread(void *arg)
 			packet_queue_put(&is->audioq, pkt);
         } else if (pkt->stream_index == is->video_stream && pkt_in_play_range
                    && !(is->video_st && (is->video_st->disposition & AV_DISPOSITION_ATTACHED_PIC))) {
-		packet_queue_put(&is->videoq, pkt);
-#if 1  //if (!strcmp(ic->iformat->name, "rtsp"))
-		{
-			if(!check_idr){
-				if(!pkt->flags){
-	        		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. pkt.flags = %d\n",__FUNCTION__, __LINE__, pkt->flags);
-					continue;
-				}else{
-					check_idr = 1;
-					av_log(NULL, AV_LOG_INFO, "[gdebug %s, %d]. pkt.flags = %d\n",__FUNCTION__, __LINE__, pkt->flags);
-				}
-						
-				
-        	}
-        }
-#endif	
+			packet_queue_put(&is->videoq, pkt);
 
-#ifdef MAX_CACHED_DURATION
-if(!is->paused){  
-	if (is->max_cached_duration > 0 && (pkt->flags & AV_PKT_FLAG_KEY)) {
-		control_queue_duration(ffp, is);
-	}
-}
-#endif
+			//check first frame is IDR
+			if(!find_idr){
+				if(pkt->flags & AV_PKT_FLAG_KEY){
+					find_idr = 1;
+					if(first_pframe_cnt){
+						av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. before IDR, P frame num is %d\n",__FUNCTION__, __LINE__, first_pframe_cnt);
+					}
+				}else{
+					first_pframe_cnt ++;
+				}
+			}
+			
+			#ifdef MAX_CACHED_DURATION
+				if(!is->paused && ffp->blive == 1 && ffp->first_video_frame_rendered){  
+					if (is->max_cached_duration > 0 && (pkt->flags & AV_PKT_FLAG_KEY)) {
+						control_queue_duration(ffp, is);
+					}
+				}
+			#endif
 		
 #ifdef FFP_MERGE
         } else if (pkt->stream_index == is->subtitle_stream && pkt_in_play_range) {
@@ -3801,9 +3826,11 @@ long ffp_get_duration_l(FFPlayer *ffp)
         return 0;
 
     int64_t duration = fftime_to_milliseconds(is->ic->duration);
-    if (duration < 0)
-        return 0;
+	av_log(NULL, AV_LOG_INFO, "[gdebug %s, %d]. duration = %lld\n",__FUNCTION__, __LINE__, duration);
 
+	if (duration < 0)
+        return 0;
+	
     return (long)duration;
 }
 
@@ -4052,7 +4079,7 @@ void ffp_check_buffering_l(FFPlayer *ffp)
         buf_percent = buf_size_percent;
     }
 
-    if (buf_time_percent >= 0 || buf_size_percent >= 0) {  //gongjia
+    if (buf_time_percent >= 0 || buf_size_percent >= 0) { 
         buf_percent = FFMAX(buf_time_percent, buf_size_percent);
 		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. buf_percent=%d\n",__FUNCTION__, __LINE__, buf_percent);
     }
