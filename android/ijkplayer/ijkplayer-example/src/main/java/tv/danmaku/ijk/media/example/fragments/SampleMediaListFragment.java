@@ -28,6 +28,9 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import java.util.List;
 
 import tv.danmaku.ijk.media.example.R;
 import tv.danmaku.ijk.media.example.activities.VideoActivity;
@@ -66,6 +69,26 @@ public class SampleMediaListFragment extends Fragment {
                 VideoActivity.intentTo(activity, url, name);
             }
         });
+        Util.getVideoList(activity, new Util.Callback() {
+            @Override
+            public void onResult(Object obj) {
+                if (obj instanceof List) {
+                    mAdapter.setNotifyOnChange(false);
+                    for (String url : (List<String>) obj) {
+                        mAdapter.addItem(url, url);
+                    }
+                    addDefaultUrl();
+                    mAdapter.notifyDataSetChanged();
+                } else {
+                    mAdapter.setNotifyOnChange(false);
+                    addDefaultUrl();
+                    mAdapter.notifyDataSetChanged();
+                    Toast.makeText(activity, "get url list fail!", Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+    }
+	 private void addDefaultUrl() {
         //rtsp
         mAdapter.addItem("rtsp://218.204.223.237:554/live/1/67A7572844E51A64/f68g2mj7wjua3la7.sdp", "rtsp port");
         mAdapter.addItem("rtsp://119.164.59.39:1554/iptv/Tvod/iptv/001/001/ch15050914035980594154.rsc/27191_Uni.sdp", "rtsp IPTV-CCTV");
