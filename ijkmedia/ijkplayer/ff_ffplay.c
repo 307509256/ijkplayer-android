@@ -2469,7 +2469,7 @@ static void control_audio_queue_duration(FFPlayer *ffp, VideoState *is) {
 			if(duration >= 0){
             	cached_duration = duration * av_q2d(is->audio_st->time_base) * 1000;
 			}else{
-				av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d] duration = %lld\n", __FUNCTION__, __LINE__, duration);
+				//av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d] duration = %lld\n", __FUNCTION__, __LINE__, duration);
 				cached_duration = 0;
 			}
         }
@@ -3080,7 +3080,7 @@ static int read_thread(void *arg)
 			
 			#ifdef MAX_CACHED_DURATION
 				if(!is->paused && ffp->blive == 1 && ffp->first_video_frame_rendered){  
-					if (is->max_cached_duration > 0 && (pkt->flags & AV_PKT_FLAG_KEY)) {
+					if (is->max_cached_duration > 0 && is->max_cached_duration <= 5000 && (pkt->flags & AV_PKT_FLAG_KEY)) {  //ms
 						control_queue_duration(ffp, is);
 					}
 				}
@@ -3330,7 +3330,7 @@ void ffp_global_init()
     avfilter_register_all();
 #endif
     av_register_all();
-	av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. ijkav_register_all\n",__FUNCTION__, __LINE__);
+
     ijkav_register_all();
 
     avformat_network_init();
@@ -3826,7 +3826,6 @@ long ffp_get_duration_l(FFPlayer *ffp)
         return 0;
 
     int64_t duration = fftime_to_milliseconds(is->ic->duration);
-	av_log(NULL, AV_LOG_INFO, "[gdebug %s, %d]. duration = %lld\n",__FUNCTION__, __LINE__, duration);
 
 	if (duration < 0)
         return 0;
@@ -4081,7 +4080,7 @@ void ffp_check_buffering_l(FFPlayer *ffp)
 
     if (buf_time_percent >= 0 || buf_size_percent >= 0) { 
         buf_percent = FFMAX(buf_time_percent, buf_size_percent);
-		av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. buf_percent=%d\n",__FUNCTION__, __LINE__, buf_percent);
+		//av_log(NULL, AV_LOG_ERROR, "[gdebug %s, %d]. buf_percent=%d\n",__FUNCTION__, __LINE__, buf_percent);
     }
     if (buf_percent) {
 #ifdef FFP_SHOW_BUF_POS
@@ -4101,8 +4100,10 @@ void ffp_check_buffering_l(FFPlayer *ffp)
             hwm_in_ms = ffp->dcc.last_high_water_mark_in_ms;
 
 		//limit buf max
+		if(ffp->blive == 1){
 		if (hwm_in_ms > 3000){
             hwm_in_ms = 3000;
+			}
 		}
 		
         ffp->dcc.current_high_water_mark_in_ms = hwm_in_ms;

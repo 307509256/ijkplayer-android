@@ -106,6 +106,22 @@ public class SampleMediaListFragment extends Fragment {
     }
 	 private void addDefaultUrl() {
          mAdapter.addItem("   ", "   ");
+         //local
+         mAdapter.addItem("file:///sdcard/h264-1.mp4", "local h264-1");
+         mAdapter.addItem("file:///sdcard/h265-1.mp4", "local h265-1");
+         mAdapter.addItem("file:///sdcard/h264-2.mp4", "local h264-2");
+         mAdapter.addItem("file:///sdcard/h265-2.mp4", "local h265-2");
+         mAdapter.addItem("file:///sdcard/h264-3.mp4", "local h264-3");
+         mAdapter.addItem("file:///sdcard/h265-3.mp4", "local h265-3");
+
+         //concat
+         mAdapter.addItem("file:///sdcard/1.ffconcat", "concat 1");
+         mAdapter.addItem("file:///sdcard/2.ffconcat", "concat 2");
+
+         //265
+         mAdapter.addItem("http://ooygc7cud.bkt.clouddn.com/h265-1.mp4", "qiniu h265-1");
+         mAdapter.addItem("http://ooygc7cud.bkt.clouddn.com/h265-2.mp4", "qiniu h265-2");
+
         //rtsp
         mAdapter.addItem("rtsp://218.204.223.237:554/live/1/67A7572844E51A64/f68g2mj7wjua3la7.sdp", "rtsp port");
         mAdapter.addItem("rtsp://119.164.59.39:1554/iptv/Tvod/iptv/001/001/ch15050914035980594154.rsc/27191_Uni.sdp", "rtsp IPTV-CCTV");
@@ -116,12 +132,14 @@ public class SampleMediaListFragment extends Fragment {
 
         //rtmp
         mAdapter.addItem("rtmp://rtmpplay3.idol001.com/live/korea_sbs", "korea_sbs");
+        mAdapter.addItem("rtmp://pw.live.fangyantianxia.cn/fangyan/7777", "fy");
 
         //http
         mAdapter.addItem("http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/gear5/prog_index.m3u8", "1080P");
         mAdapter.addItem("http://live.hkstv.hk.lxdns.com/live/hks/playlist.m3u8", "720P");
         mAdapter.addItem("http://vod1.fangyan.tv/3a7f682547baf856.mp4", "http-moov-end-slow");
         mAdapter.addItem("http://vod1.fangyan.tv/baf9a54d78113b54.mp4", "http-moov-head-fast");
+        mAdapter.addItem("http://pw.live.fangyantianxia.cn/fangyan/7777.flv", "fy");
 
         //https
         mAdapter.addItem("https://image.qiluyidian.mobi/58502406867019855214.mp4", "https-test");
